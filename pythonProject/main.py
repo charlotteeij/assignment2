@@ -14,12 +14,21 @@ from fileinput import close
 #create a list of all candidate pairs, no duplicates, lowest index first
 
 def find_candidate_pairs(minhash):
-    #create set of tuples for candidate pairs
-    #set automatically takes care of duplicates
-    candidates = set()
+    #create list of tuples for candidate pairs
+    candidates = list()
 
-
-
+    #iterate over all the buckets
+    for key, value in minhash.items():
+        #ignore buckets that are too big
+        #TODO
+        #find all possible pair combinations
+        for i in range(len(value)):
+            for j in range(i + 1, len(value)):
+                #make sure the lowest value is the first item
+                if value[i] < value[j]:
+                    candidates.append((value[i], value[j]))
+                else:
+                    candidates.append((value[j], value[i]))
     return candidates
 
 #compare candidate pairs (signature)
@@ -60,13 +69,12 @@ def print_pair_to_file(cand1, cand2, write_mode):
 def find_and_print_pairs(minhash_table, signature_matrix, candidate_data):
     #go over the buckets to find candidate pairs
     candidate_pairs = find_candidate_pairs(minhash_table)
-    print('pairs')
     write_mode = 'w'
     for (cand1, cand2) in candidate_pairs:
         #first compare signatures
         if compare_cand_signatures(signature_matrix(cand1), signature_matrix(cand2)):
            #if signatures seem similar, compare the original data
-           if compare_cand_original(cand1, cand2):
+           if compare_cand_original(candidate_data(cand1), candidate_data(cand2)):
                #original is also similar so write to file
                print_pair_to_file(cand1, cand2, write_mode)
                #after first pair is written, append to file instead of writing
@@ -75,7 +83,21 @@ def find_and_print_pairs(minhash_table, signature_matrix, candidate_data):
 
 if __name__ == "__main__":
     print('main')
-    find_candidate_pairs("hey")
+
+    random_seed = input("Please input random seed: ")
+    print("You entered: " + random_seed)
+
+
+
+    #random test code
+    minhash_dict = {}
+    minhash_dict[1] = [5, 1, 4]
+    minhash_dict[2] = [3]
+    minhash_dict[3] = [2]
+    minhash_dict[4] = [6,0]
+
+    candidates = find_candidate_pairs(minhash_dict)
+    print(candidates)
 
     print_pair_to_file(1, 3, 'w')
     print_pair_to_file(1, 4, 'a')
