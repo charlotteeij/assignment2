@@ -87,8 +87,6 @@ if __name__ == "__main__":
     random_seed = input("Please input random seed: ")
     print("You entered: " + random_seed)
 
-
-
     #random test code
     minhash_dict = {}
     minhash_dict[1] = [5, 1, 4]
