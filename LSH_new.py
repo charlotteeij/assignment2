@@ -72,7 +72,7 @@ def find_candidate_pairs(minhash):
     for num, band_id in enumerate(minhash):
         for key, value in minhash[num].items():
             #ignore buckets that are too big (more than 10 items)
-            if len(value) > 10:
+            if len(value) > 5:
                 continue
             #find all possible pair combinations
             for i in range(len(value)):
@@ -112,7 +112,7 @@ def compare_cand_original(cand1, cand2):
     intersection = len(cand1_set.intersection(cand2_set))
     union = len(cand1_set.union(cand2_set))
     similarity = intersection / union
-    #true if jaccard similarity is bigger then 0.5
+    #true if jaccard similarity is bigger than 0.5
     return similarity > 0.5
 
 def print_pair_to_file(cand1, cand2, write_mode):
@@ -126,28 +126,33 @@ def find_and_print_pairs(minhash_table, signatures, candidate_data):
     candidate_pairs = find_candidate_pairs(minhash_table)
     print('amount of candidate pairs:', len(candidate_pairs))
     write_mode = 'w'
+    similar_signatures = 0
+    similar_candidates = 0
     for (cand1, cand2) in candidate_pairs:
         #first compare signatures
         if compare_cand_signatures(signatures[:, cand1], signatures[:, cand2]):
-            print('signature check passed', cand1, cand2)
+            similar_signatures += 1
             #if signatures seem similar, compare the original data
-            if compare_cand_original(candidate_data[cand1].indices, candidate_data[cand2].indices):
-                print('candidate check passed', cand1, cand2)
+            if compare_cand_original(candidate_data[:, cand1].indices, candidate_data[:, cand2].indices):
+                similar_candidates += 1
                 #original is also similar so write to file
                 print_pair_to_file(cand1, cand2, write_mode)
                 #after first pair is written, append to file instead of writing
                 write_mode = 'a'
-
+    print('similar signatures: ', similar_signatures, 'similar candidates: ', similar_candidates)
 
 if __name__ == "__main__":
 
     data_file = 'user_movie_rating.npy'
-    num_permutations = 100
-    rows_per_band = 5
+    num_permutations = 140
+    rows_per_band = 10
     seed = 42
 
     signatures, num_users, matrix = generate_signatures(data_file, num_permutations)
     num_bands = signatures.shape[0] // rows_per_band  # Total bands
     buckets = lsh(signatures, num_users, rows_per_band, num_bands, seed=seed)
+
+    print(matrix[:, 1].indices)
+    print(matrix[:, 120].indices)
 
     find_and_print_pairs(buckets, signatures, matrix)
