@@ -113,7 +113,7 @@ def compare_cand_original(cand1, cand2):
     intersection = len(cand1_set.intersection(cand2_set))
     union = len(cand1_set.union(cand2_set))
     similarity = intersection / union
-    #true if jaccard similarity is bigger then 0.5
+    #true if jaccard similarity is bigger than 0.5
     return similarity > 0.5
 
 def print_pair_to_file(cand1, cand2, write_mode):
