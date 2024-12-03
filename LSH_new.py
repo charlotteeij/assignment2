@@ -4,31 +4,39 @@ import hashlib
 from itertools import combinations
 from fileinput import close
 
-
+# Load in the data file and generate the signature matrix
 def generate_signatures(data_file, num_permutations=100):
-
+    # Loading in the data file
     data = np.load(data_file)
     users = data[:, 0]
     movies = data[:, 1]
     ranking = data[:, 2]
 
+    # Convert the data into a csc sparse matrix
     matrix = scipy.sparse.csc_matrix((ranking, [users, movies]))
 
     num_users = matrix.shape[1]
     num_movies = matrix.shape[0]
 
+    # Creat random permutations of the number of movies
     permutations = []
     for _ in range(num_permutations):
         permutations.append(np.random.permutation(num_movies))
-    
+
+    # Extract for each user the movies that were rated
     user_movies = []
     for user in range(num_users):
         user_movies.append(matrix[:, user].indices)
 
+    # Create the signature matrix
     sign = np.zeros((num_permutations, num_users), dtype=int)
+    # Loop over the different permutations
     for num, permutation in enumerate(permutations):
+        # Loop over the users and which movies were rated by that specific user
         for user, movies in enumerate(user_movies):
+            # Check if the user rated movies
             if len(movies) > 0:
+                # Take as signature the lowest value
                 sign[num, user] = np.min(permutation[movies])
 
     print(sign)
