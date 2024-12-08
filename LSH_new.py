@@ -5,7 +5,7 @@ from itertools import combinations
 from fileinput import close
 
 # Load in the data file and generate the signature matrix
-def generate_signatures(data_file, num_permutations=100):
+def generate_signatures(data_file, num_permutations=100, seed=None):
     # Loading in the data file
     data = np.load(data_file)
     users = data[:, 0]
@@ -20,6 +20,7 @@ def generate_signatures(data_file, num_permutations=100):
 
     # Creat random permutations of the number of movies
     permutations = []
+    np.random.seed(seed)
     for _ in range(num_permutations):
         permutations.append(np.random.permutation(num_movies))
 
@@ -39,7 +40,7 @@ def generate_signatures(data_file, num_permutations=100):
                 # Take as signature the lowest value
                 sign[num, user] = np.min(permutation[movies])
 
-    print(sign)
+    # print(sign)
     return sign, num_users, matrix
 
 
@@ -148,19 +149,30 @@ def find_and_print_pairs(minhash_table, signatures, candidate_data):
                 #after first pair is written, append to file instead of writing
                 write_mode = 'a'
     print('similar signatures: ', similar_signatures, 'similar candidates: ', similar_candidates)
+    return len(candidate_pairs), similar_signatures, similar_candidates
+
+
+def run_different_params(permutations, rows, random_seed):
+    data_file = 'user_movie_rating.npy'
+    num_permutations = permutations
+    rows_per_band = rows
+    seed = random_seed
+
+    signatures, num_users, matrix = generate_signatures(data_file, num_permutations, seed)
+    num_bands = signatures.shape[0] // rows_per_band  # Total bands
+    buckets = lsh(signatures, num_users, rows_per_band, num_bands, seed)
+    candidates, signatures, similars = find_and_print_pairs(buckets, signatures, matrix)
 
 if __name__ == "__main__":
 
+    seed = int(input("Please input random seed: "))
+    print("You entered: ", seed)
+
     data_file = 'user_movie_rating.npy'
-    num_permutations = 140
+    num_permutations = 80
     rows_per_band = 10
-    seed = 42
 
-    signatures, num_users, matrix = generate_signatures(data_file, num_permutations)
+    signatures, num_users, matrix = generate_signatures(data_file, num_permutations, seed)
     num_bands = signatures.shape[0] // rows_per_band  # Total bands
-    buckets = lsh(signatures, num_users, rows_per_band, num_bands, seed=seed)
-
-    print(matrix[:, 1].indices)
-    print(matrix[:, 120].indices)
-
+    buckets = lsh(signatures, num_users, rows_per_band, num_bands, seed)
     find_and_print_pairs(buckets, signatures, matrix)
